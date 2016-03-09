@@ -1,0 +1,26 @@
+{
+  "name": "homebridge-synology",
+  "version": "0.0.1",
+  "description": "Synology Diskstation support for Homebridge: https://github.com/nfarina/homebridge",
+  "license": "ISC",
+  "keywords": [
+    "homebridge-plugin",
+    "Synology",
+    "Diskstation"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/stfnhmplr/homebridge-synology.git"
+  },
+  "bugs": {
+    "url": "http://github.com/stfnhmplr/homebridge-synology/issues"
+  },
+  "engines": {
+    "node": ">=0.12.0",
+    "homebridge": ">=0.2.0"
+  },
+  "dependencies": {
+    "request": "^2.69.0",
+    "wake_on_lan": "0.0.4"
+  }
+}
