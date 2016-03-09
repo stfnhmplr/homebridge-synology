@@ -2,9 +2,9 @@
 homebridge-plugin for using Synology Diskstations with Apple-Homekit.
 
 #Installation
-Follow the instruction in [NPM](https://www.npmjs.com/package/homebridge) for the homebridge server installation. The plugin is published through [NPM](https://www.npmjs.com/package/homebridge-denon) and should be installed "globally" by typing:
+Follow the instruction in [NPM](https://www.npmjs.com/package/homebridge) for the homebridge server installation. The plugin is published through [NPM](https://www.npmjs.com/package/homebridge-synology) and should be installed "globally" by typing:
 
-    sudo npm install -g homebridge-denon
+    sudo npm install -g homebridge-synology
 
 #Configuration
 
