@@ -15,8 +15,9 @@ function SynologyAccessory(log, config) {
     this.ip = config['ip'];
     this.secure = config['secure'];
     this.name = config['name'];
+    this.synoport = config['port'] || (this.secure ? '5001' : '5000');
     this.mac = config['mac'];
-    this.url = 'http' + (this.secure ? 's' : '') + '://' + this.ip + (this.secure ? ':5001' : ':5000');
+    this.url = 'http' + (this.secure ? 's' : '') + '://' + this.ip + ":" + this.synoport;
     this.params = {
         login: {
             api: 'SYNO.API.Auth',
