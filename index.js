@@ -1,99 +1,162 @@
 var Service, Characteristic;
-var request = require('request');
-var wol = require('wake_on_lan');
+var Synology = require('./lib/synology');
+var inherits = require('util').inherits;
+
 
 module.exports = function (homebridge) {
     Service = homebridge.hap.Service;
     Characteristic = homebridge.hap.Characteristic;
 
+    fixInheritance(SynologyAccessory.CpuLoad, Characteristic);
+    fixInheritance(SynologyAccessory.DiskUsage, Characteristic);
+    fixInheritance(SynologyAccessory.StatsService, Service);
+
     homebridge.registerAccessory('homebridge-synology', 'Synology', SynologyAccessory);
 };
+
+
+function fixInheritance(subclass, superclass) {
+    var proto = subclass.prototype;
+    inherits(subclass, superclass);
+    subclass.prototype.parent = superclass.prototype;
+    for (var mn in proto) {
+        subclass.prototype[mn] = proto[mn];
+    }
+}
+
 
 function SynologyAccessory(log, config) {
     this.log = log;
     this.config = config;
-    this.ip = config['ip'];
-    this.secure = config['secure'];
+    this.port = config['port'] || (this.secure ? '5001' : '5000');
     this.name = config['name'];
-    this.synoport = config['port'] || (this.secure ? '5001' : '5000');
-    this.mac = config['mac'];
-    this.url = 'http' + (this.secure ? 's' : '') + '://' + this.ip + ':' + this.synoport;
-    this.params = {
-        login: {
-            api: 'SYNO.API.Auth',
-            method: 'login',
-            version: 3,
-            account: config['account'],
-            passwd: config['password'],
-            session: 'homebridge-synology-' + Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 10),
-            format: 'sid'
-        },
-        logout: {
-            api: 'SYNO.API.Auth',
-            method: 'login',
-            version: 3
-        },
-        shutdown: {
-            api: 'SYNO.DSM.System',
-            version: 1,
-            method: 'shutdown',
-            _sid: '' //available after login
-        }
-    };
+    this.account = config['account'];
+    this.passwd = config['password'];
 
-    this.service = new Service.Switch('Power');
+    this.synology = new Synology(config['ip'], config['mac'], config['secure'], this.port);
 }
 
+
+SynologyAccessory.CpuLoad = function () {
+    Characteristic.call(this, 'CPU Load', '12d21a89-9466-4548-8edd-b05e6b93c23e');
+    this.setProps({
+        format: Characteristic.Formats.UINT8,
+        unit: Characteristic.Units.PERCENTAGE,
+        perms: [Characteristic.Perms.READ, Characteristic.Perms.NOTIFY]
+    });
+    this.value = this.getDefaultValue();
+};
+
+
+SynologyAccessory.DiskUsage = function () {
+    Characteristic.call(this, 'Disk Usage', 'de3c3d3d-6f86-446c-9dac-535858736ddd');
+    this.setProps({
+        format: Characteristic.Formats.UINT8,
+        unit: Characteristic.Units.PERCENTAGE,
+        perms: [Characteristic.Perms.READ, Characteristic.Perms.NOTIFY] //, Characteristic.Perms.NOTIFY
+    });
+    this.value = this.getDefaultValue();
+};
+
+
+SynologyAccessory.StatsService = function (displayName, subtype) {
+    Service.call(this, displayName, '9d0ea4eb-31db-47e9-83ef-302193e669d8', subtype);
+    this.addCharacteristic(SynologyAccessory.DiskUsage);
+    this.addOptionalCharacteristic(SynologyAccessory.CpuLoad);
+};
+
+
 SynologyAccessory.prototype.getPowerState = function (callback) {
-    request({url: this.url + '/webman/index.cgi', method: 'GET', timeout: 3000}, function (error, response) {
-        if (!error && response.statusCode == 200) {
-            callback(null, true);
+    this.synology.getPowerState(function (err, state) {
+        if (!err) {
+            this.log('current power state is: ' + state);
+            callback(null, state);
         } else {
-            callback(null, false);
+            this.log(err);
+            callback(err);
         }
     }.bind(this));
 };
 
+
 SynologyAccessory.prototype.setPowerState = function (powerState, callback) {
 
     if (powerState) { //turn on
-        wol.wake(this.mac, function (error) {
-            if (!error) {
-                this.log('Diskstation woken up');
-                callback(null)
+        this.synology.wakeUp(function (err) {
+            if (!err) {
+                this.log('Diskstation woked up!');
+                callback(null);
             } else {
-                this.log(error);
-                callback(error);
+                this.log('Something went wrong: ' + err);
+                callback(err);
             }
         }.bind(this));
     }
 
     else { //turn off
-        request({url: this.url + '/webapi/auth.cgi', qs: this.params.login, method: 'GET', timeout: 3000},
-            function (error, response, body) {
-                if (!error && response.statusCode == 200) {
-                    var res = JSON.parse(body);
-
-                    if (res.success) {
-                        this.params.shutdown._sid = res.data.sid;
-                        request({url: this.url + '/webapi/dsm/system.cgi', qs: this.params.shutdown, method: 'GET'},
-                            function (error, response, body) {
-                                if (!error && response.statusCode == 200 && JSON.parse(body).success) {
-                                    this.log('Diskstation shuts down.');
-                                    callback(null);
-                                } else {
-                                    this.log(error || new Error('undefinied error'));
-                                    callback(error);
-                                }
-                            }.bind(this));
-                    }
-                } else {
-                    this.log(error || new Error('Can not connect to Diskstation'));
-                    callback(error);
-                }
-            }.bind(this));
+        this.synology.login(this.account, this.passwd, function (err) {
+            if (!err) {
+                this.synology.shutdown(function (err) {
+                    (err) ? callback(err) : callback(null);
+                });
+            } else {
+                callback(err);
+            }
+        }.bind(this));
     }
 };
+
+
+SynologyAccessory.prototype.getCpuLoad = function (callback) {
+    this.synology.login(this.account, this.passwd, function (err) {
+        if (!err) {
+            this.synology.getCpuLoad(function (err, data) {
+                if (!err) {
+                    this.log('current cpu load: %s %', data);
+                    callback(null, data);
+                } else {
+                    this.log('Something went wrong: ' + data);
+                    callback(err);
+                }
+            }.bind(this));
+        }
+    }.bind(this));
+};
+
+
+SynologyAccessory.prototype.getDiskUsage = function (callback) {
+    this.synology.login(this.account, this.passwd, function (err) {
+        if (!err) {
+            this.synology.getDiskUsage(function (err, data) {
+                if (!err) {
+                    this.log('current volume usage: %s %', data);
+                    callback(null, data);
+                } else {
+                    this.log('Something went wrong: ' + data);
+                    callback(err);
+                }
+            }.bind(this));
+        }
+    }.bind(this));
+};
+
+
+SynologyAccessory.prototype.getSystemTemp = function (callback) {
+    this.synology.login(this.account, this.passwd, function (err) {
+        if (!err) {
+            this.synology.getSystemTemp(function (err, data) {
+                if (!err) {
+                    this.log('current system temp: %s °C', data);
+                    callback(null, data);
+                } else {
+                    this.log('Something went wrong: ' + data);
+                    callback(err);
+                }
+            }.bind(this));
+        }
+    }.bind(this));
+};
+
 
 SynologyAccessory.prototype.getServices = function () {
     var informationService = new Service.AccessoryInformation();
@@ -104,9 +167,20 @@ SynologyAccessory.prototype.getServices = function () {
         .setCharacteristic(Characteristic.Model, this.name)
         .setCharacteristic(Characteristic.SerialNumber, 'synology-serial-number');
 
-    this.service.getCharacteristic(Characteristic.On)
+    var switchService = new Service.Switch('Power');
+    switchService.getCharacteristic(Characteristic.On)
         .on('get', this.getPowerState.bind(this))
         .on('set', this.setPowerState.bind(this));
 
-    return [informationService, this.service];
+    var statsService = new SynologyAccessory.StatsService('Stats Service');
+    statsService.getCharacteristic(SynologyAccessory.DiskUsage)
+        .on('get', this.getDiskUsage.bind(this));
+    statsService.getCharacteristic(SynologyAccessory.CpuLoad)
+        .on('get', this.getCpuLoad.bind(this));
+
+    var tempService = new Service.TemperatureSensor('System Temperature');
+    tempService.getCharacteristic(Characteristic.CurrentTemperature)
+        .on('get', this.getSystemTemp.bind(this));
+
+    return [informationService, switchService, tempService, statsService];
 };

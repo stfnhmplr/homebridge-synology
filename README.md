@@ -1,5 +1,5 @@
 # Homebridge-Synology
-homebridge-plugin for using Synology Diskstations with Apple-Homekit.
+homebridge-plugin. Control your Synology Diskstation with Apple-Homekit.
 
 #Installation
 Follow the instruction in [NPM](https://www.npmjs.com/package/homebridge) for the homebridge server installation. The plugin is published through [NPM](https://www.npmjs.com/package/homebridge-synology) and should be installed "globally" by typing:
@@ -36,5 +36,11 @@ Example:
     }
   
 #Functions
-for now you can only wake up (wake-on-lan has to be active) and shutdown your diskstation
+- wake up (wake-on-lan has to be active) your diskstation
+- shutdown your diskstation
+- get the current system temperature
+- get the current cpu load
+- get the disk usage quote (it is the average usage if you have more than one volume)
+
+more to come
 
