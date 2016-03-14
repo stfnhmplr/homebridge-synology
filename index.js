@@ -163,11 +163,9 @@ SynologyAccessory.prototype.getServices = function () {
 
     informationService
         .setCharacteristic(Characteristic.Name, this.name)
-        .setCharacteristic(Characteristic.Manufacturer, 'Synology')
-        .setCharacteristic(Characteristic.Model, this.name)
-        .setCharacteristic(Characteristic.SerialNumber, 'synology-serial-number');
+        .setCharacteristic(Characteristic.Manufacturer, 'Synology');
 
-    var switchService = new Service.Switch('Power');
+    var switchService = new Service.Switch(this.name);
     switchService.getCharacteristic(Characteristic.On)
         .on('get', this.getPowerState.bind(this))
         .on('set', this.setPowerState.bind(this));
