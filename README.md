@@ -33,7 +33,7 @@ Example:
                 "secure": false,
                 "account": "admin",
                 "password": "supersecret",
-                "version": 5 //default 6
+                "version": 5
             }
         ]
     }
