@@ -16,7 +16,8 @@
             "port": "5000",
             "secure": false,
             "account": "admin",
-            "password": "supersecret"
+            "password": "supersecret",
+            "version": 6
         }
     ]
 }

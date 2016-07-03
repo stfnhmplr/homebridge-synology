@@ -33,7 +33,13 @@ function SynologyAccessory(log, config) {
     this.account = config['account'];
     this.passwd = config['password'];
 
-    this.synology = new Synology(config['ip'], config['mac'], config['secure'], this.port);
+    this.synology = new Synology({
+      ip: config['ip'],
+      mac: config['mac'],
+      secure: config['secure'],
+      port: this.port,
+      version: config['version']
+    });
 }
 
 

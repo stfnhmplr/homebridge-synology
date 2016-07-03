@@ -1,0 +1,7 @@
+node_modules
+.DS_Store
+.npmignore
+test.js
+test.json
+_ressources
+api-list.json
