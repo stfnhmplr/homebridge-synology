@@ -28,7 +28,6 @@ function fixInheritance(subclass, superclass) {
 function SynologyAccessory(log, config) {
     this.log = log;
     this.config = config;
-    this.port = config['port'] || (this.secure ? '5001' : '5000');
     this.name = config['name'];
     this.account = config['account'];
     this.passwd = config['password'];
@@ -36,8 +35,8 @@ function SynologyAccessory(log, config) {
     this.synology = new Synology({
       ip: config['ip'],
       mac: config['mac'],
-      secure: config['secure'],
-      port: this.port,
+      secure: config['secure'] || null,
+      port: config['port'] || null,
       version: config['version']
     });
 }
