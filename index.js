@@ -29,15 +29,15 @@ function SynologyAccessory(log, config) {
     this.log = log;
     this.config = config;
     this.name = config['name'];
-    this.account = config['account'];
-    this.passwd = config['password'];
 
     this.synology = new Synology({
       ip: config['ip'],
       mac: config['mac'],
       secure: config['secure'] || null,
       port: config['port'] || null,
-      version: config['version']
+      version: config['version'],
+      user: config['user'] || config['account'],
+      passwd: config['password']
     });
 }
 
@@ -58,7 +58,7 @@ SynologyAccessory.DiskUsage = function () {
     this.setProps({
         format: Characteristic.Formats.UINT8,
         unit: Characteristic.Units.PERCENTAGE,
-        perms: [Characteristic.Perms.READ, Characteristic.Perms.NOTIFY] //, Characteristic.Perms.NOTIFY
+        perms: [Characteristic.Perms.READ, Characteristic.Perms.NOTIFY]
     });
     this.value = this.getDefaultValue();
 };
@@ -72,94 +72,90 @@ SynologyAccessory.StatsService = function (displayName, subtype) {
 
 
 SynologyAccessory.prototype.getPowerState = function (callback) {
-    this.synology.getPowerState(function (err, state) {
+    let that = this;
+
+    that.synology.getPowerState(function (err, state) {
         if (!err) {
-            this.log('current power state is: ' + state);
+            that.log('current power state is: ' + state);
             callback(null, state);
         } else {
-            this.log(err);
+            that.log(err);
             callback(err);
         }
-    }.bind(this));
+    });
 };
 
 
 SynologyAccessory.prototype.setPowerState = function (powerState, callback) {
+    let that = this;
 
     if (powerState) { //turn on
-        this.synology.wakeUp(function (err) {
+        that.synology.wakeUp(function (err) {
             if (!err) {
-                this.log('Diskstation woked up!');
+                that.log('Diskstation woked up!');
                 callback(null);
             } else {
-                this.log('Something went wrong: ' + err);
+                that.log('Something went wrong: ' + err);
                 callback(err);
             }
-        }.bind(this));
+        });
     }
 
     else { //turn off
-        this.synology.login(this.account, this.passwd, function (err) {
+        that.synology.shutdown(function (err) {
             if (!err) {
-                this.synology.shutdown(function (err) {
-                    (err) ? callback(err) : callback(null);
-                });
+                that.log("Shutting down Diskstation")
+                callback(null);
             } else {
+                that.log("Error shutting down your Diskstation")
                 callback(err);
             }
-        }.bind(this));
+        });
     }
 };
 
 
 SynologyAccessory.prototype.getCpuLoad = function (callback) {
-    this.synology.login(this.account, this.passwd, function (err) {
+    let that = this;
+
+    that.synology.getCpuLoad(function (err, data) {
         if (!err) {
-            this.synology.getCpuLoad(function (err, data) {
-                if (!err) {
-                    this.log('current cpu load: %s %', data);
-                    callback(null, data);
-                } else {
-                    this.log('Something went wrong: ' + data);
-                    callback(err);
-                }
-            }.bind(this));
+            that.log('current cpu load: %s %', data);
+            callback(null, data);
+        } else {
+            that.log('Can not get CpuLoad' + err);
+            callback(null, -1); //testing
         }
-    }.bind(this));
+    });
 };
 
 
 SynologyAccessory.prototype.getDiskUsage = function (callback) {
-    this.synology.login(this.account, this.passwd, function (err) {
+    let that = this;
+
+    that.synology.getDiskUsage(function (err, data) {
         if (!err) {
-            this.synology.getDiskUsage(function (err, data) {
-                if (!err) {
-                    this.log('current volume usage: %s %', data);
-                    callback(null, data);
-                } else {
-                    this.log('Something went wrong: ' + data);
-                    callback(err);
-                }
-            }.bind(this));
+            that.log('current volume usage: %s %', data);
+            callback(null, data);
+        } else {
+            that.log('Can not get DiskUsage Quote: ' + err);
+            callback(null, -1); //testing
         }
-    }.bind(this));
+    });
 };
 
 
 SynologyAccessory.prototype.getSystemTemp = function (callback) {
-    this.synology.login(this.account, this.passwd, function (err) {
+    let that = this;
+    that.synology.getSystemTemp(function (err, data) {
         if (!err) {
-            this.synology.getSystemTemp(function (err, data) {
-                if (!err) {
-                    this.log('current system temp: %s °C', data);
-                    callback(null, data);
-                } else {
-                    this.log('Something went wrong: ' + data);
-                    callback(err);
-                }
-            }.bind(this));
+            that.log('current system temp: %s °C', data);
+            callback(null, data);
+        } else {
+            that.log('Can not get SystemTemp: ' + err);
+            callback(null, -1); //testing
         }
-    }.bind(this));
+    });
 };
 
 
