@@ -123,8 +123,8 @@ SynologyAccessory.prototype.getCpuLoad = function (callback) {
             that.log('current cpu load: %s %', data);
             callback(null, data);
         } else {
-            that.log('Can not get CpuLoad' + err);
-            callback(null, -1); //testing
+            that.log(err);
+            callback(null, 0); //testing
         }
     });
 };
@@ -138,8 +138,8 @@ SynologyAccessory.prototype.getDiskUsage = function (callback) {
             that.log('current volume usage: %s %', data);
             callback(null, data);
         } else {
-            that.log('Can not get DiskUsage Quote: ' + err);
-            callback(null, -1); //testing
+            that.log(err);
+            callback(null, 0); //testing
         }
     });
 };
@@ -152,8 +152,8 @@ SynologyAccessory.prototype.getSystemTemp = function (callback) {
             that.log('current system temp: %s °C', data);
             callback(null, data);
         } else {
-            that.log('Can not get SystemTemp: ' + err);
-            callback(null, -1); //testing
+            that.log(err);
+            callback(null, 0); //testing
         }
     });
 };
