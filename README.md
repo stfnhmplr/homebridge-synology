@@ -1,7 +1,7 @@
 # Homebridge-Synology
 homebridge-plugin. Control your Synology Diskstation with Apple-Homekit.
 
-> now with support for DSM 5.x and 6.x
+> support for DSM 5.x and 6.x
 
 #Installation
 Follow the instruction in [NPM](https://www.npmjs.com/package/homebridge) for the homebridge server installation. The plugin is published through [NPM](https://www.npmjs.com/package/homebridge-synology) and should be installed "globally" by typing:
@@ -33,7 +33,7 @@ Example:
                 "secure": false,
                 "account": "admin",
                 "password": "supersecret",
-                "version": 5
+                "version": 5 //DSM Version, default is 6
             }
         ]
     }
