@@ -66,8 +66,8 @@ SynologyAccessory.DiskUsage = function () {
 
 SynologyAccessory.StatsService = function (displayName, subtype) {
     Service.call(this, displayName, '9d0ea4eb-31db-47e9-83ef-302193e669d8', subtype);
-    this.addCharacteristic(SynologyAccessory.DiskUsage);
-    this.addOptionalCharacteristic(SynologyAccessory.CpuLoad);
+    this.addCharacteristic(new SynologyAccessory.DiskUsage());
+    this.addOptionalCharacteristic(new SynologyAccessory.CpuLoad());
 };
 
 
