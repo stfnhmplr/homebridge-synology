@@ -72,7 +72,7 @@ SynologyAccessory.StatsService = function (displayName, subtype) {
 
 
 SynologyAccessory.prototype.getPowerState = function (callback) {
-    let that = this;
+    var that = this;
 
     that.synology.getPowerState(function (err, state) {
         if (!err) {
@@ -87,7 +87,7 @@ SynologyAccessory.prototype.getPowerState = function (callback) {
 
 
 SynologyAccessory.prototype.setPowerState = function (powerState, callback) {
-    let that = this;
+    var that = this;
 
     if (powerState) { //turn on
         that.synology.wakeUp(function (err) {
@@ -116,7 +116,7 @@ SynologyAccessory.prototype.setPowerState = function (powerState, callback) {
 
 
 SynologyAccessory.prototype.getCpuLoad = function (callback) {
-    let that = this;
+    var that = this;
 
     that.synology.getCpuLoad(function (err, data) {
         if (!err) {
@@ -131,7 +131,7 @@ SynologyAccessory.prototype.getCpuLoad = function (callback) {
 
 
 SynologyAccessory.prototype.getDiskUsage = function (callback) {
-    let that = this;
+    var that = this;
 
     that.synology.getDiskUsage(function (err, data) {
         if (!err) {
@@ -146,7 +146,7 @@ SynologyAccessory.prototype.getDiskUsage = function (callback) {
 
 
 SynologyAccessory.prototype.getSystemTemp = function (callback) {
-    let that = this;
+    var that = this;
     that.synology.getSystemTemp(function (err, data) {
         if (!err) {
             that.log('current system temp: %s °C', data);
