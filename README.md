@@ -33,10 +33,17 @@ Example:
                 "secure": false,
                 "account": "admin",
                 "password": "supersecret",
-                "version": 5 //DSM Version, default is 6
+                "version": 5 //DSM Version, default is 6,
+                "disabled": ["switch", "temp"]
             }
         ]
     }
+
+##Disabling
+You can disable services of your Synology accessory. add a `disabled` property with an array to your config.json. You can add the following parameters:
+- `switch` to disable the On/Off switch
+- `temp` to disable the temperature
+- `stats` to disable the custom characeristics cpu load and disk usage quote.
 
 #Functions
 - wake up (wake-on-lan has to be active) your diskstation

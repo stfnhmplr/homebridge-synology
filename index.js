@@ -181,5 +181,15 @@ SynologyAccessory.prototype.getServices = function () {
     tempService.getCharacteristic(Characteristic.CurrentTemperature)
         .on('get', this.getSystemTemp.bind(this));
 
-    return [informationService, switchService, tempService, statsService];
+    var services = [informationService];
+
+    if ('disabled' in this.config) {
+        if (this.config.disabled.indexOf("switch") === -1) { services.push(switchService); }
+        if (this.config.disabled.indexOf("stats") === -1) { services.push(statsService); }
+        if (this.config.disabled.indexOf("temp") === -1) { services.push(tempService); }
+    } else {
+        var services = [informationService, switchService, tempService, statsService];
+    }
+
+    return services;
 };
