@@ -33,7 +33,8 @@ Example:
                 "secure": false,
                 "account": "admin",
                 "password": "supersecret",
-                "version": 5 //DSM Version, default is 6,
+                "version": 5, //DSM Version, default is 6
+                "timeout": 5000, //in ms
                 "disabled": ["switch", "temp"]
             }
         ]

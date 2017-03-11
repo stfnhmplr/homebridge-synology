@@ -37,7 +37,8 @@ function SynologyAccessory(log, config) {
       port: config['port'] || null,
       version: config['version'],
       user: config['user'] || config['account'],
-      passwd: config['password']
+      passwd: config['password'],
+      timeout: config['timeout'] || null
     });
 }
 
