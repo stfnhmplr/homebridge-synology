@@ -43,8 +43,8 @@ Example:
         ]
     }
 
-## Disable Services
-You can disable services of your Synology accessory. add a `disabled` property with an array to your config.json. You can add the following parameters:
+## Disable services
+You can disable services of your Synology accessory. Add a `disabled` property with an array to your config.json. You can add the following parameters:
 - `switch` to disable the On/Off switch
 - `temp` to disable the temperature
 - `stats` to disable the custom characeristics cpu load and disk usage quote.
