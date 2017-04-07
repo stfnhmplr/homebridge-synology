@@ -6,12 +6,12 @@ homebridge-plugin. Control your Synology Diskstation with Apple-Homekit.
 
 > support for DSM 5.x and 6.x
 
-#Installation
+# Installation
 Follow the instruction in [NPM](https://www.npmjs.com/package/homebridge) for the homebridge server installation. The plugin is published through [NPM](https://www.npmjs.com/package/homebridge-synology) and should be installed "globally" by typing:
 
     sudo npm install -g homebridge-synology
 
-#Configuration
+# Configuration
 
 config.json
 
@@ -43,13 +43,13 @@ Example:
         ]
     }
 
-##Disabling
+## Disable Services
 You can disable services of your Synology accessory. add a `disabled` property with an array to your config.json. You can add the following parameters:
 - `switch` to disable the On/Off switch
 - `temp` to disable the temperature
 - `stats` to disable the custom characeristics cpu load and disk usage quote.
 
-#Functions
+# Functions
 - wake up (wake-on-lan has to be active) your diskstation
 - shutdown your diskstation
 - get the current system or average disk temperature
