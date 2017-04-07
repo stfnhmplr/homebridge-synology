@@ -1,4 +1,7 @@
 # Homebridge-Synology
+
+[![Package Quality](http://npm.packagequality.com/shield/homebridge-synology.svg)](http://packagequality.com/#?package=homebridge-synology)
+
 homebridge-plugin. Control your Synology Diskstation with Apple-Homekit.
 
 > support for DSM 5.x and 6.x
