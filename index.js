@@ -28,18 +28,21 @@ function fixInheritance(subclass, superclass) {
 function SynologyAccessory(log, config) {
     this.log = log;
     this.config = config;
-    this.name = config['name'];
+    this.name = config.name;
 
+    log('Diskstation url: http' + config.secure ? 's' : '' + '://' + config.ip + ':' + config.port);
+    
     this.synology = new Synology({
-      ip: config['ip'],
-      mac: config['mac'],
-      secure: config['secure'] || null,
-      port: config['port'] || null,
-      version: config['version'],
-      user: config['user'] || config['account'],
-      passwd: config['password'],
-      timeout: config['timeout'] || null
+      ip: config.ip,
+      mac: config.mac,
+      secure: config.secure || null,
+      port: config.port || null,
+      version: config.version,
+      user: config.user || config.account,
+      passwd: config.password,
+      timeout: config.timeout || 3000
     });
+    
 }
 
 
