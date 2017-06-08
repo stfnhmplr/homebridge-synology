@@ -32,23 +32,27 @@ Example:
                 "name": "Diskstation", // the name is displayed in homekit
                 "ip": "192.168.178.1", // ip of your diskstation
                 "mac": "A1:B3:C3:D4:E5:EX", // mac of your diskstation
-                "port": "port number", // port number of the webinterface, default 5000 or 5001 (https)
+                "port": "port number", // (optional) port number of the webinterface, default 5000 (or 5001 if you set secure=true)
                 "secure": false, // set this to true if you use a secure connection (https)
-                "account": "admin", 
+                "account": "admin",
                 "password": "supersecret",
-                "version": 5, // DSM Version, default is 6
-                "timeout": 5000, // in ms, increase this value for slow network connections
-                "disabled": ["switch", "temp"] // see "disable services"
+                "version": 5, // (optional) DSM Version, default is 6
+                "timeout": 5000, // (optional) in ms, increase this value for slow network connections
+                "disabled": ["switch", "temp"] // (optional) see "disable services"
             }
         ]
     }
+
 
 ## Disable services
 You can disable services of your Synology accessory. Add a `disabled` property with an array to your config.json. You can add the following parameters:
 - `switch` to disable the On/Off switch
 - `temp` to disable the temperature
 - `stats` to disable the custom characeristics cpu load and disk usage quote.
+**Note** This accessory will only appear as switch at the Apple Home App. Use the EVE App instead to get all services.
 
+## Two factor authentification (2FA)
+This plugin does not support 2FA. If you have enabled 2FA, you can't use this plugin.
 
 # Functions
 - wake up (wake-on-lan has to be active) your diskstation
@@ -56,6 +60,10 @@ You can disable services of your Synology accessory. Add a `disabled` property w
 - get the current system or average disk temperature
 - get the current cpu load
 - get the disk usage quote (it is the average usage if you have more than one volume)
+
+# Issues
+Please double check your config.json before opening an issue.
+When you open an issue provide a detailed description of your problem and add your config.json (without password).
 
 # Roadmap
 - Polling feature with ping
