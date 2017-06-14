@@ -30,8 +30,8 @@ function SynologyAccessory(log, config) {
     this.config = config;
     this.name = config.name;
 
-    log('Diskstation url: http' + config.secure ? 's' : '' + '://' + config.ip + ':' + config.port);
-    
+    this.log('Diskstation url: http' + config.secure ? 's' : '' + '://' + config.ip + ':' + config.port);
+
     this.synology = new Synology({
       ip: config.ip,
       mac: config.mac,
@@ -42,7 +42,7 @@ function SynologyAccessory(log, config) {
       passwd: config.password,
       timeout: config.timeout || 3000
     });
-    
+
 }
 
 
@@ -71,7 +71,7 @@ SynologyAccessory.DiskUsage = function () {
 SynologyAccessory.StatsService = function (displayName, subtype) {
     Service.call(this, displayName, '9d0ea4eb-31db-47e9-83ef-302193e669d8', subtype);
     this.addCharacteristic(new SynologyAccessory.DiskUsage());
-    this.addOptionalCharacteristic(new SynologyAccessory.CpuLoad());
+    this.addCharacteristic(new SynologyAccessory.CpuLoad());
 };
 
 
@@ -108,10 +108,10 @@ SynologyAccessory.prototype.setPowerState = function (powerState, callback) {
     else { //turn off
         that.synology.shutdown(function (err) {
             if (!err) {
-                that.log("Shutting down Diskstation")
+                that.log('Shutting down Diskstation')
                 callback(null);
             } else {
-                that.log("Error shutting down your Diskstation")
+                that.log('Error shutting down Diskstation: ' + err)
                 callback(err);
             }
         });
