@@ -68,4 +68,4 @@ Please double check your config.json before opening an issue.
 When you open an issue provide a detailed description of your problem and add your config.json (without password).
 
 # Roadmap
-- Polling feature with ping
+- ~~Polling feature with ping~~
