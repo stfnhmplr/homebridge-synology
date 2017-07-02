@@ -18,7 +18,8 @@
             "account": "admin",
             "password": "supersecret",
             "version": 6,
-            "disabled": ["switch"]
+            "doPolling": true,
+            "pollingInterval": 60
         }
     ]
 }

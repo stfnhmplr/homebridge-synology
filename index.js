@@ -1,6 +1,7 @@
 var Service, Characteristic;
 var Synology = require('./lib/synology');
 var inherits = require('util').inherits;
+var pollingtoevent = require('polling-to-event');
 
 
 module.exports = function (homebridge) {
@@ -42,6 +43,45 @@ function SynologyAccessory(log, config) {
       passwd: config.password,
       timeout: config.timeout || 3000
     });
+    
+    var that = this;
+    
+    this.doPolling = config.doPolling || false;
+	this.pollingInterval = config.pollingInterval || 60;
+	this.pollingInterval = parseInt(this.pollingInterval);
+	
+	this.setAttempt = 0;
+	this.state = false;
+	
+	if (this.interval < 10 && this.interval > 100000) {
+		this.log('polling interval out of range... disabled polling');
+		this.doPolling = false;
+	}
+	
+	// Status Polling
+	if (this.doPolling) {
+		that.log('start polling...');
+		var statusemitter = pollingtoevent(function(done) {
+			that.log('do poll...')
+			that.getPowerState(function(error, state) {
+				done(error, state, that.setAttempt);
+			}, 'statuspoll');
+		},{
+		    longpolling: true,
+		    interval: that.pollingInterval * 1000,
+		    longpollEventName:'statuspoll'
+		});
+
+		statusemitter.on('statuspoll', function(data) {
+			that.state = data;
+			that.log('poll end, state: ' + data);
+			
+			if (that.switchService ) {
+			    that.switchService.getCharacteristic(Characteristic.On)
+    			.updateValue(that.state, null, 'statuspoll');
+			}
+		});
+	}
 
 }
 
@@ -75,23 +115,35 @@ SynologyAccessory.StatsService = function (displayName, subtype) {
 };
 
 
-SynologyAccessory.prototype.getPowerState = function (callback) {
+SynologyAccessory.prototype.getPowerState = function (callback, context) {
     var that = this;
-
-    that.synology.getPowerState(function (err, state) {
-        if (!err) {
-            that.log('current power state is: ' + state);
-            callback(null, state);
-        } else {
-            that.log(err);
-            callback(err);
-        }
-    });
+    
+    if ((!context || context != 'statuspoll') && this.doPolling) {
+		callback(null, this.state);
+	} else {
+        that.synology.getPowerState(function (err, state) {
+            if (!err) {
+                that.log('current power state is: ' + state);
+                callback(null, state);
+            } else {
+                that.log(err);
+                callback(err);
+            }
+        });
+    }
 };
 
 
-SynologyAccessory.prototype.setPowerState = function (powerState, callback) {
+SynologyAccessory.prototype.setPowerState = function (powerState, callback, context) {
     var that = this;
+    
+    //don't set the value while polling
+	if (context && context === 'statuspoll') {
+		callback(null, powerState);
+	    return;
+	}
+    
+    this.setAttempt++;
 
     if (powerState) { //turn on
         that.synology.wakeUp(function (err) {
@@ -170,8 +222,8 @@ SynologyAccessory.prototype.getServices = function () {
         .setCharacteristic(Characteristic.Name, this.name)
         .setCharacteristic(Characteristic.Manufacturer, 'Synology');
 
-    var switchService = new Service.Switch(this.name);
-    switchService.getCharacteristic(Characteristic.On)
+    this.switchService = new Service.Switch(this.name);
+    this.switchService.getCharacteristic(Characteristic.On)
         .on('get', this.getPowerState.bind(this))
         .on('set', this.setPowerState.bind(this));
 
@@ -188,11 +240,11 @@ SynologyAccessory.prototype.getServices = function () {
     var services = [informationService];
 
     if ('disabled' in this.config) {
-        if (this.config.disabled.indexOf("switch") === -1) { services.push(switchService); }
+        if (this.config.disabled.indexOf("switch") === -1) { services.push(this.switchService); }
         if (this.config.disabled.indexOf("stats") === -1) { services.push(statsService); }
         if (this.config.disabled.indexOf("temp") === -1) { services.push(tempService); }
     } else {
-        var services = [informationService, switchService, tempService, statsService];
+        var services = [informationService, this.switchService, tempService, statsService];
     }
 
     return services;

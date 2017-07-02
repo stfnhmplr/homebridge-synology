@@ -38,7 +38,9 @@ Example:
                 "password": "supersecret",
                 "version": 5, // (optional) DSM Version, default is 6
                 "timeout": 5000, // (optional) in ms, increase this value for slow network connections
-                "disabled": ["switch", "temp"] // (optional) see "disable services"
+                "disabled": ["switch", "temp"], // (optional) see "disable services"
+                "doPolling": true, // (optional) default is false
+                "pollingInterval": 60 // (optional) in s, default is 60
             }
         ]
     }
