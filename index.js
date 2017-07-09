@@ -243,13 +243,13 @@ SynologyAccessory.prototype.getServices = function () {
         .on('get', this.getPowerState.bind(this))
         .on('set', this.setPowerState.bind(this));
 
-    var statsService = new SynologyAccessory.StatsService('Stats Service');
+    var statsService = new SynologyAccessory.StatsService(this.name + 'status');
     statsService.getCharacteristic(SynologyAccessory.DiskUsage)
         .on('get', this.getDiskUsage.bind(this));
     statsService.getCharacteristic(SynologyAccessory.CpuLoad)
         .on('get', this.getCpuLoad.bind(this));
 
-    var tempService = new Service.TemperatureSensor('System Temperature');
+    var tempService = new Service.TemperatureSensor(this.name + ' temperature');
     tempService.getCharacteristic(Characteristic.CurrentTemperature)
         .on('get', this.getSystemTemp.bind(this));
 
