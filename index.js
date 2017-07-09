@@ -43,21 +43,21 @@ function SynologyAccessory(log, config) {
       passwd: config.password,
       timeout: config.timeout || 3000
     });
-    
+
     var that = this;
-    
+
     this.doPolling = config.doPolling || false;
 	this.pollingInterval = config.pollingInterval || 60;
 	this.pollingInterval = parseInt(this.pollingInterval);
-	
+
 	this.setAttempt = 0;
 	this.state = false;
-	
+
 	if (this.interval < 10 && this.interval > 100000) {
 		this.log('polling interval out of range... disabled polling');
 		this.doPolling = false;
 	}
-	
+
 	// Status Polling
 	if (this.doPolling) {
 		that.log('start polling...');
@@ -75,7 +75,7 @@ function SynologyAccessory(log, config) {
 		statusemitter.on('statuspoll', function(data) {
 			that.state = data;
 			that.log('poll end, state: ' + data);
-			
+
 			if (that.switchService ) {
 			    that.switchService.getCharacteristic(Characteristic.On)
     			.updateValue(that.state, null, 'statuspoll');
@@ -117,7 +117,7 @@ SynologyAccessory.StatsService = function (displayName, subtype) {
 
 SynologyAccessory.prototype.getPowerState = function (callback, context) {
     var that = this;
-    
+
     if ((!context || context != 'statuspoll') && this.doPolling) {
 		callback(null, this.state);
 	} else {
@@ -136,13 +136,13 @@ SynologyAccessory.prototype.getPowerState = function (callback, context) {
 
 SynologyAccessory.prototype.setPowerState = function (powerState, callback, context) {
     var that = this;
-    
+
     //don't set the value while polling
 	if (context && context === 'statuspoll') {
 		callback(null, powerState);
 	    return;
 	}
-    
+
     this.setAttempt++;
 
     if (powerState) { //turn on
@@ -174,6 +174,11 @@ SynologyAccessory.prototype.setPowerState = function (powerState, callback, cont
 SynologyAccessory.prototype.getCpuLoad = function (callback) {
     var that = this;
 
+    if(!that.state) {
+        callback(null, 0)
+        return;
+    }
+
     that.synology.getCpuLoad(function (err, data) {
         if (!err) {
             that.log('current cpu load: %s %', data);
@@ -189,6 +194,11 @@ SynologyAccessory.prototype.getCpuLoad = function (callback) {
 SynologyAccessory.prototype.getDiskUsage = function (callback) {
     var that = this;
 
+    if(!that.state) {
+        callback(null, 0)
+        return;
+    }
+
     that.synology.getDiskUsage(function (err, data) {
         if (!err) {
             that.log('current volume usage: %s %', data);
@@ -203,6 +213,12 @@ SynologyAccessory.prototype.getDiskUsage = function (callback) {
 
 SynologyAccessory.prototype.getSystemTemp = function (callback) {
     var that = this;
+
+    if(!that.state) {
+        callback(null, 0)
+        return;
+    }
+
     that.synology.getSystemTemp(function (err, data) {
         if (!err) {
             that.log('current system temp: %s °C', data);
