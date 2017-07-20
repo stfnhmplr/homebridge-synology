@@ -2,7 +2,6 @@ var Service, Characteristic;
 var Synology = require('./lib/synology');
 var inherits = require('util').inherits;
 var pollingtoevent = require('polling-to-event');
-var ssl = require('ssl-root-cas').inject();
 
 
 module.exports = function (homebridge) {
