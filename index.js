@@ -243,7 +243,7 @@ SynologyAccessory.prototype.getServices = function () {
         .on('get', this.getPowerState.bind(this))
         .on('set', this.setPowerState.bind(this));
 
-    var statsService = new SynologyAccessory.StatsService(this.name + 'status');
+    var statsService = new SynologyAccessory.StatsService(this.name + ' status');
     statsService.getCharacteristic(SynologyAccessory.DiskUsage)
         .on('get', this.getDiskUsage.bind(this));
     statsService.getCharacteristic(SynologyAccessory.CpuLoad)
