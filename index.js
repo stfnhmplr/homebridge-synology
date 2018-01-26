@@ -53,7 +53,7 @@ function SynologyAccessory(log, config) {
 	this.setAttempt = 0;
 	this.state = false;
 
-	if (this.interval < 10 && this.interval > 100000) {
+	if (this.pollingInterval < 10 && this.pollingInterval > 100000) {
 		this.log('polling interval out of range... disabled polling');
 		this.doPolling = false;
 	}
