@@ -31,7 +31,7 @@ function SynologyAccessory(log, config) {
     this.config = config;
     this.name = config.name;
 
-    this.log('Diskstation url: http' + config.secure ? 's' : '' + '://' + config.ip + ':' + config.port);
+    this.log('Diskstation url: http' + (config.secure ? 's' : '') + '://' + config.ip + ':' + config.port);
 
     this.synology = new Synology({
       ip: config.ip,
