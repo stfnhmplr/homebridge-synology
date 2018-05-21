@@ -31,7 +31,7 @@ function SynologyAccessory(log, config) {
     this.config = config;
     this.name = config.name;
 
-    this.log('Diskstation url: http' + config.secure ? 's' : '' + '://' + config.ip + ':' + config.port);
+    this.log('Diskstation url: http' + (config.secure ? 's' : '') + '://' + config.ip + ':' + config.port);
 
     this.synology = new Synology({
       ip: config.ip,
@@ -53,7 +53,7 @@ function SynologyAccessory(log, config) {
 	this.setAttempt = 0;
 	this.state = false;
 
-	if (this.interval < 10 && this.interval > 100000) {
+	if (this.pollingInterval < 10 && this.pollingInterval > 100000) {
 		this.log('polling interval out of range... disabled polling');
 		this.doPolling = false;
 	}
@@ -243,7 +243,7 @@ SynologyAccessory.prototype.getServices = function () {
         .on('get', this.getPowerState.bind(this))
         .on('set', this.setPowerState.bind(this));
 
-    var statsService = new SynologyAccessory.StatsService(this.name + 'status');
+    var statsService = new SynologyAccessory.StatsService(this.name + ' status');
     statsService.getCharacteristic(SynologyAccessory.DiskUsage)
         .on('get', this.getDiskUsage.bind(this));
     statsService.getCharacteristic(SynologyAccessory.CpuLoad)
