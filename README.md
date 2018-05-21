@@ -6,12 +6,12 @@ homebridge-plugin. Control your Synology Diskstation with Apple-Homekit.
 
 > supports DSM 5.x and 6.x
 
-# Installation
+## Installation
 Follow the instruction in [NPM](https://www.npmjs.com/package/homebridge) for the homebridge server installation. The plugin is published through [NPM](https://www.npmjs.com/package/homebridge-synology) and should be installed "globally" by typing:
 
     sudo npm install -g homebridge-synology
 
-# Configuration
+## Configuration
 
 config.json
 
@@ -37,8 +37,8 @@ Example:
                 "account": "admin",
                 "password": "supersecret",
                 "version": 5, // (optional) DSM Version, default is 6
-                "timeout": 5000, // (optional) in ms, increase this value for slow network connections
-                "disabled": ["switch", "temp"], // (optional) see "disable services"
+                "timeout": 5000, // (optional) in ms, increase this value for slow diskstations
+                "disabled": ["temp"], // (optional) see "disable services"
                 "doPolling": true, // (optional) default is false
                 "pollingInterval": 60 // (optional) in s, default is 60
             }
@@ -46,26 +46,28 @@ Example:
     }
 
 
-## Disable services
+### Disable services
 You can disable services of your Synology accessory. Add a `disabled` property with an array to your config.json. You can add the following parameters:
-- `switch` to disable the On/Off switch
 - `temp` to disable the temperature
 - `stats` to disable the custom characeristics cpu load and disk usage quote.
 **Note** This accessory will only appear as switch at the Apple Home App. Use the EVE App instead to get all services.
 
-## Two factor authentification (2FA)
+### Two factor authentification (2FA)
 This plugin does not support 2FA. If you have enabled 2FA, you can't use this plugin.
 
-# Functions
+## Functions
 - wake up (wake-on-lan has to be active) your diskstation
 - shutdown your diskstation
 - get the current system or average disk temperature
 - get the current cpu load
 - get the disk usage quote (it is the average usage if you have more than one volume)
 
-# Issues
+## Issues
 Please double check your config.json before opening an issue.
 When you open an issue provide a detailed description of your problem and add your config.json (without password).
 
-# Roadmap
+## Roadmap
 - ~~Polling feature with ping~~
+
+## support
+PRs are always welcome. You can also support me with a coffee <a href="https://www.buymeacoffee.com/himpler" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: auto !important;width: auto !important;" ></a>
