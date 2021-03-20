@@ -148,7 +148,7 @@ SynologyAccessory.prototype.setPowerState = function (powerState, callback, cont
     if (powerState) { //turn on
         that.synology.wakeUp(function (err) {
             if (!err) {
-                that.log('Diskstation woked up!');
+                that.log('Diskstation woke up!');
                 callback(null);
             } else {
                 that.log('Something went wrong: ' + err);

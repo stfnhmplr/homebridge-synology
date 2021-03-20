@@ -50,6 +50,8 @@ Example:
 You can disable services of your Synology accessory. Add a `disabled` property with an array to your config.json. You can add the following parameters:
 - `temp` to disable the temperature
 - `stats` to disable the custom characeristics cpu load and disk usage quote.
+- `switch` to disable shutting down the Synology. 
+
 **Note** This accessory will only appear as switch at the Apple Home App. Use the EVE App instead to get all services.
 
 ### Two factor authentification (2FA)
