@@ -1,0 +1,68 @@
+{
+  "pluginAlias": "homebridge-synology",
+  "pluginType": "accessory",
+  "singular": false,
+  "schema": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "title": "Name",
+        "type": "string",
+        "required": true,
+        "default": "Diskstation"
+      },
+      "host": {
+        "title": "Host",
+        "type": "string",
+        "required": true,
+        "default": ""
+      },
+      "mac": {
+        "title": "Mac Address",
+        "type": "string",
+        "required": true,
+        "default": ""
+      },
+      "port": {
+        "title": "Port",
+        "type": "number",
+        "required": true,
+        "default": 5000
+      },
+      "username": {
+        "title": "Username",
+        "type": "string",
+        "required": true,
+        "default": "admin"
+      },
+      "password": {
+        "title": "Password",
+        "type": "string",
+        "required": true,
+        "default": ""
+      },
+      "protocol": {
+        "title": "Protocol",
+        "type": "string",
+        "required": true,
+        "default": "http"
+      },
+      "version": {
+        "title": "Version",
+        "type": "string",
+        "required": true,
+        "default": "6.2.2"
+      },
+      "otp": {
+        "title": "OTP-Code",
+        "type": "string",
+        "required": false
+      },
+      "disabled": {
+        "title": "Disabled",
+        "type": "Array",
+        "required": false
+      }
+    }
+  }
+}
