@@ -53,14 +53,27 @@
         "required": true,
         "default": "6.2.2"
       },
-      "otp": {
-        "title": "OTP-Code",
-        "type": "string",
+      "startupTime": {
+        "title": "Startup Time",
+        "type": "number",
+        "default": 60,
+        "required": false
+      },
+      "shutdownTime": {
+        "title": "Shutdown Time",
+        "type": "number",
+        "default": 60,
         "required": false
       },
       "disabled": {
-        "title": "Disabled",
+        "title": "Disabled services",
         "type": "Array",
+        "default": [],
+        "required": false
+      },
+      "otp": {
+        "title": "OTP-Code",
+        "type": "string",
         "required": false
       }
     }

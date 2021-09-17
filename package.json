@@ -18,6 +18,7 @@
   "main": "dist/SynologyAccessory.js",
   "scripts": {
     "lint": "eslint src/**.ts --max-warnings=0",
+    "lint:fix": "eslint src/**.ts --max-warnings=0 --fix",
     "watch": "npm run build && npm link && nodemon",
     "build": "rimraf ./dist && tsc",
     "prepublishOnly": "npm run lint && npm run build"

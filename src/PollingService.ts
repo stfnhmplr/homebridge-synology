@@ -1,11 +1,15 @@
-import EventEmitter from 'events'
+import EventEmitter from 'events';
+
+interface PollingFunction {
+    (): void;
+}
 
 export default class PollingService extends EventEmitter {
-  private readonly req: Function
+  private readonly req: PollingFunction;
   private readonly interval: number;
-  private intervalId?: ReturnType<typeof setInterval>
+  private intervalId?: ReturnType<typeof setInterval>;
 
-  constructor(req: Function, interval: number = 5000) {
+  constructor(req: PollingFunction, interval = 5000) {
     super();
 
     this.req = req;
@@ -19,6 +23,7 @@ export default class PollingService extends EventEmitter {
 
   stop(): void {
     if (!this.intervalId) return;
+
     clearInterval(this.intervalId);
   }
 }

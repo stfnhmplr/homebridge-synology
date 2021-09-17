@@ -7,12 +7,19 @@ import {
   CharacteristicValue,
   HAP,
   Logging,
-  Service
+  Service,
 } from 'homebridge';
 import PollingService from './PollingService';
 import ping from 'ping';
 import syno from 'syno';
 import wol from 'wol';
+
+enum deviceStatus {
+  Online = 'Online',
+  Offline = 'Offline',
+  WakingUp = 'WakingUp',
+  ShuttingDown = 'ShuttingDown',
+};
 
 let hap: HAP;
 
@@ -21,18 +28,6 @@ export = (api: API) => {
   api.registerAccessory('synology', SynologyAccessory);
 };
 
-interface SystemInfo {
-  codepage: string,
-  model: string,
-  ram: number,
-  serial: string,
-  temperature: number,
-  time: string,
-  uptime: number,
-  version: string,
-  version_string: string
-}
-
 class SynologyAccessory implements AccessoryPlugin {
 
   private readonly log: Logging;
@@ -40,12 +35,14 @@ class SynologyAccessory implements AccessoryPlugin {
   private readonly name: string;
   private readonly host: string;
   private readonly mac: string;
-  private readonly disabled: Array<String>;
+  private readonly shutdownTime: number;
+  private readonly startupTime: number;
+  private readonly disabled: Array<string>;
   private readonly dsm: typeof syno;
-  private state: boolean = false;
   private readonly informationService: Service;
-  private readonly switchService: Service;
-  private readonly temperatureService: Service;
+  private readonly switchService?: Service;
+  private readonly temperatureService?: Service;
+  private state: deviceStatus;
 
   constructor(log: Logging, config: AccessoryConfig, api: API) {
     this.log = log;
@@ -53,7 +50,10 @@ class SynologyAccessory implements AccessoryPlugin {
     this.name = config.name;
     this.mac = config.mac;
     this.host = config.host;
+    this.shutdownTime = config.shutdownTime || 60;
+    this.startupTime = config.startupTime || 60;
     this.disabled = config.disabled || [];
+    this.state = deviceStatus.Offline;
 
     this.dsm = new syno({
       ignoreCertificateErrors: true,
@@ -63,7 +63,7 @@ class SynologyAccessory implements AccessoryPlugin {
       passwd: config.password,
       protocol: config.https ? 'https' : 'http',
       apiVersion: config.version || '6.2.2',
-      otp: config.otp || false,
+      otp: config.otp || undefined,
     });
 
     this.informationService = new hap.Service.AccessoryInformation()
@@ -75,102 +75,133 @@ class SynologyAccessory implements AccessoryPlugin {
     this.switchService = new hap.Service.Switch(this.name);
     this.switchService.getCharacteristic(hap.Characteristic.On)
       .on(CharacteristicEventTypes.SET, this.setState.bind(this));
-    this.temperatureService = new hap.Service.TemperatureSensor(`${this.name} Temperature`);
+    this.startStatePolling();
+
+    if (!this.disabled.includes('temperature')) {
+      this.temperatureService = new hap.Service.TemperatureSensor(`${this.name} Temperature`);
+      this.startTemperaturePolling();
+    }
 
     this.log.info(`Synology ${this.name} finished initializing!`);
+  }
 
+  startStatePolling(): void {
     const pollStateService = new PollingService(async () => {
       const res = await ping.promise.probe(this.host);
       pollStateService.emit('state', res.alive);
     }, 5000);
 
-    if (!this.disabled.includes('switch')) {
-      pollStateService.on('state', (state: boolean) => {
-        if (this.state === state) return;
+    pollStateService.on('state', (state: boolean) => {
+      // return if states match or device is waking up and still not online
+      if (this.state === deviceStatus.Online && state) return;
+      if (this.state === deviceStatus.Offline && !state) return;
+      if (this.state === deviceStatus.WakingUp && !state) return;
+      if (this.state === deviceStatus.ShuttingDown && state) return;
 
-        this.log.info(`state changed to ${state}; updating characteristic`);
-        this.switchService.updateCharacteristic(hap.Characteristic.On, state);
-        this.state = state;
-      });
-      pollStateService.start();
-    }
+      this.switchService!.updateCharacteristic(hap.Characteristic.On, state);
+      this.state = state ? deviceStatus.Online : deviceStatus.Offline;
+      this.log.info(`state changed to ${this.state}; updated characteristic`);
+    });
+    pollStateService.start();
 
+    this.api.on('shutdown', (): void => pollStateService.stop());
+  }
+
+  startTemperaturePolling(): void {
     const pollTemperatureService = new PollingService(async () => {
-      if (!this.state) {
-        this.temperatureService.updateCharacteristic(hap.Characteristic.StatusActive, false);
-        this.log.debug('Device is offline; Polling temperature disabled.');
+      // dont poll temperature if device is not online
+      if (this.state !== deviceStatus.Online) {
+        this.temperatureService!.updateCharacteristic(hap.Characteristic.StatusActive, false);
+        this.log.debug('Device is not online; Polling temperature disabled.');
         return;
       }
 
       try {
-        const res: SystemInfo = await this.query('dsm', 'getInfo');
+        const res: Record<string, unknown> = await this.query('dsm', 'getInfo');
         pollTemperatureService.emit('change', res.temperature);
-      } catch (e) {
-        this.temperatureService.updateCharacteristic(hap.Characteristic.StatusActive, false);
-        this.log.warn(`Can't get temperature, ${e}`);
+      } catch (err) {
+        this.temperatureService!.updateCharacteristic(hap.Characteristic.StatusActive, false);
+        this.log.warn(`Can't get temperature, ${err}`);
       }
     }, 30000);
 
-    if (!this.disabled.includes('temperature')) {
-      pollTemperatureService.on('change', (temperature: number) => {
-        this.log.debug(`updating temperature to ${temperature} °C`)
-        this.temperatureService.updateCharacteristic(hap.Characteristic.CurrentTemperature, temperature);
-        this.temperatureService.updateCharacteristic(hap.Characteristic.StatusActive, true);
-      });
-      pollTemperatureService.start();
-    }
-
-    this.api.on('shutdown', (): void => {
-      pollStateService.stop();
-      pollTemperatureService.stop();
+    pollTemperatureService.on('change', (temperature: number) => {
+      this.log.debug(`updating temperature to ${temperature} °C`);
+      this.temperatureService!.updateCharacteristic(hap.Characteristic.CurrentTemperature, temperature);
+      this.temperatureService!.updateCharacteristic(hap.Characteristic.StatusActive, true);
     });
+
+    pollTemperatureService.start();
+    this.api.on('shutdown', (): void => pollTemperatureService.stop());
   }
 
   async setState(value: CharacteristicValue, callback: CharacteristicSetCallback) {
-    if (this.state === value as boolean) return callback(null);
+    // no change if device is waking up or shutting down
+    if (this.state === deviceStatus.WakingUp || this.state === deviceStatus.ShuttingDown) {
+      return callback();
+    }
+
+    // return if states matches
+    if (this.state === deviceStatus.Online && value as boolean) return callback();
 
     if (value as boolean) {
-      this.log.debug(`wake up ${this.name}.`)
+      this.log.debug(`wake up ${this.name}.`);
       wol.wake(this.mac, (err) => {
-        if (err) return callback(err);
+        if (err) {
+          this.log.warn(`Could not wake up ${this.name}: ${err}`);
+          this.state = deviceStatus.Offline;
+          return;
+        }
         this.log.info(`${this.name} woke up!`);
-        this.state = true;
-        return callback();
+        this.state = deviceStatus.WakingUp;
+        setTimeout(() => {
+          if (this.state !== deviceStatus.WakingUp) return;
+
+          this.log.error(`Startup time of ${this.startupTime}s expired, reverting state to offline`);
+          this.state = deviceStatus.Offline;
+        }, this.startupTime * 1000);
       });
-    }
+      callback();
+    } else {
+      try {
+        this.log.debug(`Shutting down ${this.name}`);
+        await this.query('dsm', 'shutdownSystem');
+        this.state = deviceStatus.ShuttingDown;
+        setTimeout(() => {
+          if (this.state !== deviceStatus.ShuttingDown) return;
 
-    try {
-      this.log.debug(`Shutting down ${this.name}`)
-      await this.query('dsm','shutdownSystem');
-      this.log.info(`${this.name} turned off.`);
-      this.state = false;
-    } catch(e) {
-      this.log.error(`Can't shutdown ${this.name}: ${e}`);
-      return callback(e);
+          this.log.error(`Shutdown time of ${this.shutdownTime}s expired, reverting state to online`);
+          this.state = deviceStatus.Online;
+        }, this.shutdownTime * 1000);
+      } catch(err) {
+        this.log.error(`Can't shutdown ${this.name}: ${err}`);
+        this.state = deviceStatus.Online;
+      }
+      callback();
     }
-
-    callback(null);
   }
 
-  query(api: string, method: string, params:object = {}): Promise<any> {
-      return new Promise<any>((resolve, reject) => {
-          this.dsm[api][method](params, (err: any, data: object) => {
-              if (err) return reject(err);
-              resolve(data);
-          });
+  query(api: string, method: string, params:Record<string, unknown> = {}) {
+    return new Promise<Record<string, unknown>>((resolve, reject) => {
+      this.dsm[api][method](params, (err: Record<string, unknown>, data: Record<string, unknown>) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(data);
       });
+    });
   }
 
   identify(): void {
     this.log(`Identifying Synology ${this.name}`);
   }
 
-
   getServices(): Service[] {
-    return [
-      this.informationService,
-      this.switchService,
-      this.temperatureService,
-    ];
+    const services: Service[] = [this.informationService];
+
+    if (!this.disabled.includes('switch') && this.switchService) services.push(this.switchService);
+    if (!this.disabled.includes('temperature') && this.temperatureService) services.push(this.temperatureService);
+
+    return services;
   }
 }
