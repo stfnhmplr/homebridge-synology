@@ -22,7 +22,9 @@ export default class PollingService extends EventEmitter {
   }
 
   stop(): void {
-    if (!this.intervalId) return;
+    if (!this.intervalId) {
+      return;
+    }
 
     clearInterval(this.intervalId);
   }

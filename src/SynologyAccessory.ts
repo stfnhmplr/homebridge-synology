@@ -19,7 +19,7 @@ enum deviceStatus {
   Offline = 'Offline',
   WakingUp = 'WakingUp',
   ShuttingDown = 'ShuttingDown',
-};
+}
 
 let hap: HAP;
 
@@ -92,11 +92,13 @@ class SynologyAccessory implements AccessoryPlugin {
     }, 5000);
 
     pollStateService.on('state', (state: boolean) => {
-      // return if states match or device is waking up and still not online
-      if (this.state === deviceStatus.Online && state) return;
-      if (this.state === deviceStatus.Offline && !state) return;
-      if (this.state === deviceStatus.WakingUp && !state) return;
-      if (this.state === deviceStatus.ShuttingDown && state) return;
+      if ((this.state === deviceStatus.Online && state)
+        || (this.state === deviceStatus.Offline && !state)
+        || (this.state === deviceStatus.WakingUp && !state)
+        || (this.state === deviceStatus.ShuttingDown && state)
+      ) {
+        return;
+      }
 
       this.switchService!.updateCharacteristic(hap.Characteristic.On, state);
       this.state = state ? deviceStatus.Online : deviceStatus.Offline;
@@ -142,7 +144,9 @@ class SynologyAccessory implements AccessoryPlugin {
     }
 
     // return if states matches
-    if (this.state === deviceStatus.Online && value as boolean) return callback();
+    if (this.state === deviceStatus.Online && value as boolean) {
+      return callback();
+    }
 
     if (value as boolean) {
       this.log.debug(`wake up ${this.name}.`);
@@ -155,7 +159,9 @@ class SynologyAccessory implements AccessoryPlugin {
         this.log.info(`${this.name} woke up!`);
         this.state = deviceStatus.WakingUp;
         setTimeout(() => {
-          if (this.state !== deviceStatus.WakingUp) return;
+          if (this.state !== deviceStatus.WakingUp) {
+            return;
+          }
 
           this.log.error(`Startup time of ${this.startupTime}s expired, reverting state to offline`);
           this.state = deviceStatus.Offline;
@@ -168,7 +174,9 @@ class SynologyAccessory implements AccessoryPlugin {
         await this.query('dsm', 'shutdownSystem');
         this.state = deviceStatus.ShuttingDown;
         setTimeout(() => {
-          if (this.state !== deviceStatus.ShuttingDown) return;
+          if (this.state !== deviceStatus.ShuttingDown) {
+            return;
+          }
 
           this.log.error(`Shutdown time of ${this.shutdownTime}s expired, reverting state to online`);
           this.state = deviceStatus.Online;
@@ -199,8 +207,12 @@ class SynologyAccessory implements AccessoryPlugin {
   getServices(): Service[] {
     const services: Service[] = [this.informationService];
 
-    if (!this.disabled.includes('switch') && this.switchService) services.push(this.switchService);
-    if (!this.disabled.includes('temperature') && this.temperatureService) services.push(this.temperatureService);
+    if (!this.disabled.includes('switch') && this.switchService) {
+      services.push(this.switchService);
+    }
+    if (!this.disabled.includes('temperature') && this.temperatureService) {
+      services.push(this.temperatureService);
+    }
 
     return services;
   }
