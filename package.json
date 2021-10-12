@@ -1,28 +1,50 @@
 {
+  "displayName": "Homebridge Synology",
   "name": "homebridge-synology",
-  "version": "0.3.1",
-  "description": "Synology Diskstation support for Homebridge: https://github.com/nfarina/homebridge",
-  "license": "ISC",
-  "keywords": [
-    "homebridge-plugin",
-    "Synology",
-    "Diskstation"
-  ],
+  "version": "0.4.0-beta.0",
+  "description": "Control your Synology Diskstation with Homekit",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git://github.com/stfnhmplr/homebridge-synology.git"
   },
   "bugs": {
-    "url": "http://github.com/stfnhmplr/homebridge-synology/issues"
+    "url": "https://github.com/stfnhmplr/homebridge-synology/issues"
   },
   "engines": {
-    "node": ">=0.12.0",
-    "homebridge": ">=0.2.0"
+    "node": ">=10.17.0",
+    "homebridge": ">=1.3.0"
   },
+  "main": "dist/SynologyAccessory.js",
+  "scripts": {
+    "lint": "eslint src/**.ts --max-warnings=0",
+    "lint:fix": "eslint src/**.ts --max-warnings=0 --fix",
+    "watch": "npm run build && npm link && nodemon",
+    "build": "rimraf ./dist && tsc",
+    "prepublishOnly": "npm run lint && npm run build"
+  },
+  "keywords": [
+    "homebridge-plugin",
+    "synology",
+    "diskstation"
+  ],
   "dependencies": {
-    "request": "^2.69.0",
-    "util": "^0.10.3",
-    "wake_on_lan": "0.0.4",
-    "polling-to-event": "2.0.2"
+    "@types/ping": "^0.2.0",
+    "@types/wol": "^1.0.0",
+    "axios": "^0.21.1",
+    "ping": "^0.4.0",
+    "syno": "https://github.com/homeinstalator/syno",
+    "wol": "^1.0.7"
+  },
+  "devDependencies": {
+    "@types/node": "^14.14.31",
+    "@typescript-eslint/eslint-plugin": "^4.16.1",
+    "@typescript-eslint/parser": "^4.16.1",
+    "eslint": "^7.21.0",
+    "homebridge": "^1.3.1",
+    "nodemon": "^2.0.7",
+    "rimraf": "^3.0.2",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.2.2"
   }
 }

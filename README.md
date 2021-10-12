@@ -1,73 +1,59 @@
-# Homebridge-Synology
+<p align="center"><img src="https://socialify.git.ci/stfnhmplr/homebridge-synology/image?description=1&font=Inter&issues=1&language=1&pattern=Charlie%20Brown&stargazers=1&theme=Light" alt="project"></p>
 
-[![Package Quality](http://npm.packagequality.com/shield/homebridge-synology.svg)](http://packagequality.com/#?package=homebridge-synology)
+## 🧐 Features
+- Wake up (WOL has to be enabled) and shutdown your Synology Diskstation
+- Get the current system temperature
+- Supports 2-Factor-Authentication
+- Configuration through homebridge-ui-x
 
-homebridge-plugin. Control your Synology Diskstation with Apple-Homekit.
+**If you would like to support me or the further development, please consider buying me a coffee.**
 
-> supports DSM 5.x and 6.x
+<a href="https://www.buymeacoffee.com/himpler" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
-## Installation
-Follow the instruction in [NPM](https://www.npmjs.com/package/homebridge) for the homebridge server installation. The plugin is published through [NPM](https://www.npmjs.com/package/homebridge-synology) and should be installed "globally" by typing:
+## 🚀 Installation
+<p>Follow the instruction in NPM for the homebridge server installation. The plugin is published through NPM and should be installed "globally" by typing:</p>
 
-    sudo npm install -g homebridge-synology
+```
+sudo npm install -g homebridge-synology
+```
 
-## Configuration
+## 🛠️ Configuration
+Edit your `config.json` and add a new accessory. Example:
 
-config.json
+```json
+{
+    "bridge": {
+        "name": "Homebridge",
+        "username": "CC:22:3D:E3:CE:51",
+        "port": 51826,
+        "pin": "031-45-154"
+    },
+    "description": "This is an example configuration file for the homebridge synology plugin",
+    "hint": "Always paste into jsonlint.com validation page before starting your homebridge, saves a lot of frustration",
+    "accessories": [
+        {
+            "accessory": "synology",
+            "name": "Diskstation",
+            "host": "192.168.1.1",
+            "mac": "A1:B2:C3:D4:E5:F6",
+            "port": 5000,
+            "protocol": "http",
+            "username": "your-username",
+            "password": "your-password",
+            "version": "6.2.2",
+            "otp": "otp-code for 2FA",
+            "startupTime": 60,
+            "shutdownTime": 60,
+            "disabled": [],
+        }
+    ]
+}
+```
+### Some explanations
+- **Version:** Your current DSM Version. **Important:** If you are using DSM version > 7, enter `6.2.2` here anyway.
+- **OTP (optional):** If you have enabled 2-Factor-Authentication, the code must be entered here. For more information, see https://github.com/iobroker-community-adapters/ioBroker.synology/blob/HEAD/docs/en/template.md
+- **Startup and shutdown time (optional):** You can specify a duration for the startup and the shutdown process. During this time, there is no status change due to polling. Both defaults to 60s.
+- **disabled (optional):** You can disable features. The services to be deactivated must be specified as an array of strings, such as `["switch", "temperature"]`. If you disable the switch functionality, you can't start or stop your diskstation anymore.
 
-Example:
-
-    {
-        "bridge": {
-            "name": "Homebridge",
-            "username": "CC:22:3D:E3:CE:51",
-            "port": 51826,
-            "pin": "031-45-154"
-        },
-        "description": "This is an example configuration file for homebridge synology plugin",
-        "hint": "Always paste into jsonlint.com validation page before starting your homebridge, saves a lot of frustration",
-        "accessories": [
-            {
-                "accessory": "Synology",
-                "name": "Diskstation", // the name is displayed in homekit
-                "ip": "192.168.178.1", // ip of your diskstation
-                "mac": "A1:B3:C3:D4:E5:EX", // mac of your diskstation
-                "port": "port number", // (optional) port number of the webinterface, default 5000 (or 5001 if you set secure=true)
-                "secure": false, // set this to true if you use a secure connection (https)
-                "account": "admin",
-                "password": "supersecret",
-                "version": 5, // (optional) DSM Version, default is 6
-                "timeout": 5000, // (optional) in ms, increase this value for slow diskstations
-                "disabled": ["temp"], // (optional) see "disable services"
-                "doPolling": true, // (optional) default is false
-                "pollingInterval": 60 // (optional) in s, default is 60
-            }
-        ]
-    }
-
-
-### Disable services
-You can disable services of your Synology accessory. Add a `disabled` property with an array to your config.json. You can add the following parameters:
-- `temp` to disable the temperature
-- `stats` to disable the custom characeristics cpu load and disk usage quote.
-**Note** This accessory will only appear as switch at the Apple Home App. Use the EVE App instead to get all services.
-
-### Two factor authentification (2FA)
-This plugin does not support 2FA. If you have enabled 2FA, you can't use this plugin.
-
-## Functions
-- wake up (wake-on-lan has to be active) your diskstation
-- shutdown your diskstation
-- get the current system or average disk temperature
-- get the current cpu load
-- get the disk usage quote (it is the average usage if you have more than one volume)
-
-## Issues
-Please double check your config.json before opening an issue.
-When you open an issue provide a detailed description of your problem and add your config.json (without password).
-
-## Roadmap
-- ~~Polling feature with ping~~
-
-## support
-PRs are always welcome. You can also support me with a coffee <a href="https://www.buymeacoffee.com/himpler" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: auto !important;width: auto !important;" ></a>
+## 🛡️ License
+This project is licensed under the MIT

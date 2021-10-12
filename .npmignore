@@ -1,7 +1,22 @@
-# Ignore compiled code
-dist
+# Ignore source code
+src
 
 # ------------- Defaults ------------- #
+
+# gitHub actions
+.github
+
+# eslint
+.eslintrc
+
+# typescript
+tsconfig.json
+
+# vscode
+.vscode
+
+# nodemon
+nodemon.json
 
 # Logs
 logs
