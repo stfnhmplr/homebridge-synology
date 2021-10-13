@@ -1,5 +1,5 @@
 {
-  "pluginAlias": "homebridge-synology",
+  "pluginAlias": "synology",
   "pluginType": "accessory",
   "singular": false,
   "schema": {
