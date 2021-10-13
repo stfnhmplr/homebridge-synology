@@ -170,7 +170,7 @@ class SynologyAccessory implements AccessoryPlugin {
       callback();
     } else {
       try {
-        this.log.debug(`Shutting down ${this.name}`);
+        this.log.info(`Shutting down ${this.name}`);
         await this.query('dsm', 'shutdownSystem');
         this.state = deviceStatus.ShuttingDown;
         setTimeout(() => {
