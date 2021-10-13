@@ -61,7 +61,7 @@ class SynologyAccessory implements AccessoryPlugin {
       port: config.port || '5000',
       account: config.username,
       passwd: config.password,
-      protocol: config.https ? 'https' : 'http',
+      protocol: config.protocol,
       apiVersion: config.version || '6.2.2',
       otp: config.otp || undefined,
     });
