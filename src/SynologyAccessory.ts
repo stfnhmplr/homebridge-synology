@@ -38,7 +38,8 @@ class SynologyAccessory implements AccessoryPlugin {
   private readonly shutdownTime: number;
   private readonly startupTime: number;
   private readonly disabled: Array<string>;
-  private readonly dsm: typeof syno;
+  private readonly config: Record<string, unknown>;
+  private dsm?: typeof syno;
   private readonly informationService: Service;
   private readonly switchService?: Service;
   private readonly temperatureService?: Service;
@@ -54,8 +55,7 @@ class SynologyAccessory implements AccessoryPlugin {
     this.startupTime = config.startupTime || 60;
     this.disabled = config.disabled || [];
     this.state = deviceStatus.Offline;
-
-    this.dsm = new syno({
+    this.config = {
       ignoreCertificateErrors: true,
       host: config.host,
       port: config.port || '5000',
@@ -64,7 +64,7 @@ class SynologyAccessory implements AccessoryPlugin {
       protocol: config.protocol,
       apiVersion: config.version || '6.2.2',
       otp: config.otp || undefined,
-    });
+    };
 
     this.informationService = new hap.Service.AccessoryInformation()
       .setCharacteristic(hap.Characteristic.Manufacturer, 'Synology')
@@ -173,6 +173,7 @@ class SynologyAccessory implements AccessoryPlugin {
         this.log.info(`Shutting down ${this.name}`);
         await this.query('dsm', 'shutdownSystem');
         this.state = deviceStatus.ShuttingDown;
+        this.dsm = undefined;
         setTimeout(() => {
           if (this.state !== deviceStatus.ShuttingDown) {
             return;
@@ -191,6 +192,14 @@ class SynologyAccessory implements AccessoryPlugin {
 
   query(api: string, method: string, params:Record<string, unknown> = {}) {
     return new Promise<Record<string, unknown>>((resolve, reject) => {
+      if (this.state !== deviceStatus.Online) {
+        return reject(new Error(`${this.name} is offline, waking up or shutting down. No query possible`));
+      }
+
+      if (!this.dsm) {
+        this.dsm = new syno(this.config);
+      }
+
       this.dsm[api][method](params, (err: Record<string, unknown>, data: Record<string, unknown>) => {
         if (err) {
           return reject(err);
