@@ -22,6 +22,10 @@ interface RawQueryParams {
   path: string;
 }
 
+interface DiskInfo {
+  temp: number;
+}
+
 enum deviceStatus {
   Online = 'Online',
   Offline = 'Offline',
@@ -133,7 +137,7 @@ class SynologyAccessory implements AccessoryPlugin {
       }
 
       try {
-        const res: Record<string, unknown> = await this.query('dsm', 'getInfo');
+        const res = await this.query('dsm', 'getInfo');
         pollTemperatureService.emit('change', res.temperature);
       } catch (err) {
         this.temperatureService!.updateCharacteristic(hap.Characteristic.StatusActive, false);
@@ -153,7 +157,7 @@ class SynologyAccessory implements AccessoryPlugin {
 
   startDiskTemperaturePolling(): void {
     const pollDiskTemperatureService = new PollingService(async () => {
-      // don't poll temperature if device is not online
+      // don't poll disk temperature if device is not online
       if (this.state !== deviceStatus.Online) {
         this.diskTemperatureService!.updateCharacteristic(hap.Characteristic.StatusActive, false);
         this.log.debug('Device is not online; Polling disk temperature disabled.');
@@ -161,16 +165,16 @@ class SynologyAccessory implements AccessoryPlugin {
       }
 
       try {
-        const res: Record<string, any> = await this.rawQuery({
+        const res = await this.rawQuery({
           sessionName: 'StorageInfo',
           api: 'SYNO.Storage.CGI.Storage',
           version: '1',
           path: 'entry.cgi',
           method: 'load_info',
         });
-        const avgDiskTemp = res.disks
-          .map((d: Record<string, any>) => d.temp)
-          .reduce((a: number, b: number) => a + b) / res.disks.length;
+        const avgDiskTemp = (res.disks as DiskInfo[])
+          .map((d: DiskInfo) => d.temp)
+          .reduce((a: number, b: number) => a + b) / (res.disks as DiskInfo[]).length;
         pollDiskTemperatureService.emit('change', Math.round(avgDiskTemp * 10) / 10);
       } catch (err) {
         this.diskTemperatureService!.updateCharacteristic(hap.Characteristic.StatusActive, false);
