@@ -1,5 +1,8 @@
 # Changelog
 
+## [] -
+- added average disk temperature
+
 ## [0.4.1] - 2021-10-13
 - fixed typo in config schema
 - fixed protocol configuration

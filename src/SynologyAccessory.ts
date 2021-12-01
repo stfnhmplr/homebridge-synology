@@ -14,6 +14,14 @@ import ping from 'ping';
 import syno from 'syno';
 import wol from 'wol';
 
+interface RawQueryParams {
+  sessionName: string;
+  api: string;
+  method: string;
+  version: string;
+  path: string;
+}
+
 enum deviceStatus {
   Online = 'Online',
   Offline = 'Offline',
@@ -43,6 +51,7 @@ class SynologyAccessory implements AccessoryPlugin {
   private readonly informationService: Service;
   private readonly switchService?: Service;
   private readonly temperatureService?: Service;
+  private readonly diskTemperatureService?: Service;
   private state: deviceStatus;
 
   constructor(log: Logging, config: AccessoryConfig, api: API) {
@@ -78,8 +87,13 @@ class SynologyAccessory implements AccessoryPlugin {
     this.startStatePolling();
 
     if (!this.disabled.includes('temperature')) {
-      this.temperatureService = new hap.Service.TemperatureSensor(`${this.name} Temperature`);
+      this.temperatureService = new hap.Service.TemperatureSensor(`${this.name} Temperature`, 'systemp');
       this.startTemperaturePolling();
+    }
+
+    if (!this.disabled.includes('diskTemperature')) {
+      this.diskTemperatureService = new hap.Service.TemperatureSensor(`${this.name} Average Disk Temperature`, 'disktemp');
+      this.startDiskTemperaturePolling();
     }
 
     this.log.info(`Synology ${this.name} finished initializing!`);
@@ -111,7 +125,7 @@ class SynologyAccessory implements AccessoryPlugin {
 
   startTemperaturePolling(): void {
     const pollTemperatureService = new PollingService(async () => {
-      // dont poll temperature if device is not online
+      // don't poll temperature if device is not online
       if (this.state !== deviceStatus.Online) {
         this.temperatureService!.updateCharacteristic(hap.Characteristic.StatusActive, false);
         this.log.debug('Device is not online; Polling temperature disabled.');
@@ -135,6 +149,43 @@ class SynologyAccessory implements AccessoryPlugin {
 
     pollTemperatureService.start();
     this.api.on('shutdown', (): void => pollTemperatureService.stop());
+  }
+
+  startDiskTemperaturePolling(): void {
+    const pollDiskTemperatureService = new PollingService(async () => {
+      // don't poll temperature if device is not online
+      if (this.state !== deviceStatus.Online) {
+        this.diskTemperatureService!.updateCharacteristic(hap.Characteristic.StatusActive, false);
+        this.log.debug('Device is not online; Polling disk temperature disabled.');
+        return;
+      }
+
+      try {
+        const res: Record<string, any> = await this.rawQuery({
+          sessionName: 'StorageInfo',
+          api: 'SYNO.Storage.CGI.Storage',
+          version: '1',
+          path: 'entry.cgi',
+          method: 'load_info',
+        });
+        const avgDiskTemp = res.disks
+          .map((d: Record<string, any>) => d.temp)
+          .reduce((a: number, b: number) => a + b) / res.disks.length;
+        pollDiskTemperatureService.emit('change', Math.round(avgDiskTemp * 10) / 10);
+      } catch (err) {
+        this.diskTemperatureService!.updateCharacteristic(hap.Characteristic.StatusActive, false);
+        this.log.warn(`Can't get average disk temperature, ${err}`);
+      }
+    }, 30000);
+
+    pollDiskTemperatureService.on('change', (temperature: number) => {
+      this.log.debug(`updating average disk temperature to ${temperature} °C`);
+      this.diskTemperatureService!.updateCharacteristic(hap.Characteristic.CurrentTemperature, temperature);
+      this.diskTemperatureService!.updateCharacteristic(hap.Characteristic.StatusActive, true);
+    });
+
+    pollDiskTemperatureService.start();
+    this.api.on('shutdown', (): void => pollDiskTemperatureService.stop());
   }
 
   async setState(value: CharacteristicValue, callback: CharacteristicSetCallback) {
@@ -209,6 +260,29 @@ class SynologyAccessory implements AccessoryPlugin {
     });
   }
 
+  rawQuery(params: RawQueryParams) {
+    return new Promise<Record<string, unknown>>((resolve, reject) => {
+      if (this.state !== deviceStatus.Online) {
+        return reject(new Error(`${this.name} is offline, waking up or shutting down. No query possible`));
+      }
+
+      if (!this.dsm) {
+        this.dsm = new syno(this.config);
+      }
+
+      this.dsm.dsm.requestAPI({
+        params: null,
+        done(err: Record<string, unknown>, data: Record<string, unknown>) {
+          if (err) {
+            return reject(err);
+          }
+          resolve(data);
+        },
+        apiInfos: params,
+      });
+    });
+  }
+
   identify(): void {
     this.log(`Identifying Synology ${this.name}`);
   }
@@ -221,6 +295,9 @@ class SynologyAccessory implements AccessoryPlugin {
     }
     if (!this.disabled.includes('temperature') && this.temperatureService) {
       services.push(this.temperatureService);
+    }
+    if (!this.disabled.includes('diskTemperature') && this.diskTemperatureService) {
+      services.push(this.diskTemperatureService);
     }
 
     return services;
