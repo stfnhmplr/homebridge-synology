@@ -53,7 +53,7 @@ Edit your `config.json` and add a new accessory. Example:
 - **Version:** Your current DSM Version. **Important:** If you are using DSM version > 6.2.2 or DSM 7, enter `6.2.2` here anyway.
 - **OTP (optional):** If you have enabled 2-Factor-Authentication, the code must be entered here. For more information, see https://github.com/iobroker-community-adapters/ioBroker.synology/blob/HEAD/docs/en/template.md
 - **Startup and shutdown time (optional):** You can specify a duration for the startup and the shutdown process. During this time, there is no status change due to polling. Both defaults to 60s.
-- **disabled (optional):** You can disable features. The services to be deactivated must be specified as an array of strings, such as `["switch", "temperature"]`. If you disable the switch functionality, you can't start or stop your diskstation anymore.
+- **disabled (optional):** You can disable features. The services to be deactivated must be specified as an array of strings, such as `["switch", "temperature", "diskTemperature"]`. If you disable the switch functionality, you can't start or stop your diskstation anymore.
 
 ## 🛡️ License
 This project is licensed under the MIT
