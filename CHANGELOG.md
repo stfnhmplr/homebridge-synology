@@ -1,6 +1,6 @@
 # Changelog
 
-## [] -
+## [0.5.0] - 2021-12-16
 - added average disk temperature
 
 ## [0.4.1] - 2021-10-13
