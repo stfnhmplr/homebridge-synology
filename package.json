@@ -1,7 +1,7 @@
 {
   "displayName": "Homebridge Synology",
   "name": "homebridge-synology",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Control your Synology Diskstation with Homekit",
   "license": "MIT",
   "repository": {
