@@ -10,7 +10,6 @@ import {
   Service,
 } from 'homebridge';
 import PollingService from './PollingService';
-import ping from 'ping';
 import syno from 'syno';
 import wol from 'wol';
 
@@ -24,6 +23,17 @@ interface RawQueryParams {
 
 interface DiskInfo {
   temp: number;
+}
+
+interface SynoConfig {
+  ignoreCertificateErrors: boolean;
+  host: string;
+  port: string|number;
+  account: string;
+  passwd: string;
+  protocol: string;
+  apiVersion: string;
+  otp: undefined|string;
 }
 
 enum deviceStatus {
@@ -45,12 +55,11 @@ class SynologyAccessory implements AccessoryPlugin {
   private readonly log: Logging;
   private readonly api: API;
   private readonly name: string;
-  private readonly host: string;
   private readonly mac: string;
   private readonly shutdownTime: number;
   private readonly startupTime: number;
   private readonly disabled: Array<string>;
-  private readonly config: Record<string, unknown>;
+  private readonly config: SynoConfig;
   private dsm?: typeof syno;
   private readonly informationService: Service;
   private readonly switchService?: Service;
@@ -63,7 +72,6 @@ class SynologyAccessory implements AccessoryPlugin {
     this.api = api;
     this.name = config.name;
     this.mac = config.mac;
-    this.host = config.host;
     this.shutdownTime = config.shutdownTime || 60;
     this.startupTime = config.startupTime || 60;
     this.disabled = config.disabled || [];
@@ -105,8 +113,17 @@ class SynologyAccessory implements AccessoryPlugin {
 
   startStatePolling(): void {
     const pollStateService = new PollingService(async () => {
-      const res = await ping.promise.probe(this.host);
-      pollStateService.emit('state', res.alive);
+      const adapter = await import(`node:${this.config.protocol}`);
+      const options = {
+        method: 'HEAD',
+        host: this.config.host,
+        port: this.config.port,
+        rejectUnauthorized: false,
+      };
+      const req = adapter.request(options, (res) => {
+        pollStateService.emit('state', res.statusCode === 200);
+      });
+      req.end();
     }, 5000);
 
     pollStateService.on('state', (state: boolean) => {
