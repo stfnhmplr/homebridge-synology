@@ -120,8 +120,14 @@ class SynologyAccessory implements AccessoryPlugin {
         port: this.config.port,
         rejectUnauthorized: false,
       };
+
       const req = adapter.request(options, (res) => {
         pollStateService.emit('state', res.statusCode === 200);
+      });
+
+      req.on('error', (e) => {
+        this.log.debug(`can't reach ${this.name}: ${e}`);
+        pollStateService.emit('state', false);
       });
       req.end();
     }, 5000);
